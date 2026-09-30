@@ -275,7 +275,13 @@ mini_llvm_ins_info[] = {
 #undef MINI_OP
 #undef MINI_OP3
 
-#if TARGET_SIZEOF_VOID_P == 4
+/*
+ * Where a 64-bit immediate is kept follows the register size, as in MONO_EMIT_NEW_LCOMPARE_IMM:
+ * inst_l on 32-bit registers, inst_imm on 64-bit ones. Not the pointer size — the two differ on
+ * arm64_32 (64-bit registers, 32-bit pointers), where reading inst_l got 0 for every long compare
+ * immediate, so e.g. each overflow-checked conversion from long threw.
+ */
+#if SIZEOF_REGISTER == 4
 #define GET_LONG_IMM(ins) ((ins)->inst_l)
 #else
 #define GET_LONG_IMM(ins) ((ins)->inst_imm)
@@ -662,8 +668,9 @@ get_vtype_size_align (MonoType *t)
 	uint32_t align = 0;
 	int32_t size = mono_class_value_size (mono_class_from_mono_type_internal (t), &align);
 
-	/* LLVMArgAsIArgs depends on this since it stores whole words */
-	while (size < 2 * TARGET_SIZEOF_VOID_P && mono_is_power_of_two (size) == -1)
+	/* LLVMArgAsIArgs depends on this since it stores whole words — register-sized ones, which on
+	 * arm64_32 are bigger than a pointer */
+	while (size < 2 * SIZEOF_REGISTER && mono_is_power_of_two (size) == -1)
 		size ++;
 	MonoSizeAlign ret = { size, align };
 	return ret;
@@ -4137,7 +4144,7 @@ emit_entry_bb (EmitContext *ctx, LLVMBuilderRef builder)
 
 			size = mono_class_value_size (mono_class_from_mono_type_internal (t), NULL);
 			if (size == 0) {
-			} else if (size < TARGET_SIZEOF_VOID_P) {
+			} else if (size < SIZEOF_REGISTER && LLVMGetArrayLength (LLVMTypeOf (arg)) == 1 && LLVMGetIntTypeWidth (LLVMGetElementType (LLVMTypeOf (arg))) > (unsigned) size * 8) {
 				/* The upper bits of the registers might not be valid */
 				LLVMValueRef val = LLVMBuildExtractValue (builder, arg, 0, "");
 				LLVMValueRef dest = convert (ctx, ctx->addresses [reg]->value, pointer_type (LLVMIntType (size * 8)));
@@ -6088,7 +6095,7 @@ process_bb (EmitContext *ctx, MonoBasicBlock *bb)
 			values [ins->dreg] = const_int32 (GTMREG_TO_INT (ins->inst_c0));
 			break;
 		case OP_I8CONST:
-#if TARGET_SIZEOF_VOID_P == 4
+#if SIZEOF_REGISTER == 4
 			values [ins->dreg] = const_int64 (GET_LONG_IMM (ins));
 #else
 			values [ins->dreg] = const_int64 ((gint64)ins->inst_c0);

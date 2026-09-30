@@ -611,6 +611,9 @@ JS_ENGINES = [NODE_JS]
       <!-- The older watches' ABI (Series 4 to 8, Ultra 1): arm64 with 32-bit pointers. Opt in with
            /p:MonoWatchOSAbi=arm64_32; watchOS arm64 is otherwise the 64-bit ABI of Series 9 and later. -->
       <_MonoCMakeArgs Condition="'$(_MonoWatchOSArm64_32)' == 'true'" Include="-DCMAKE_OSX_ARCHITECTURES=arm64_32" />
+      <!-- arm64_32 code is LLVM-only AOT (the arm64 JIT backend has no ILP32 code generation), whose
+           exceptions are C++ ones: the runtime needs its LLVM runtime part to throw and catch them. -->
+      <_MonoCMakeArgs Condition="'$(_MonoWatchOSArm64_32)' == 'true'" Include="-DENABLE_LLVM_RUNTIME=1" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetsiOS)' == 'true' or '$(TargetstvOS)' == 'true' or '$(TargetsMacCatalyst)' == 'true'">
       <_MonoCMakeArgs Include="-DENABLE_ICALL_EXPORT=1"/>

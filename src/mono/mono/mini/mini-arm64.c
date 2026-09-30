@@ -3176,6 +3176,14 @@ mono_arch_get_llvm_call_info (MonoCompile *cfg, MonoMethodSignature *sig)
 		case ArgVtypeInIRegs:
 			lainfo->storage = LLVMArgAsIArgs;
 			lainfo->nslots = ainfo->nregs;
+#ifdef MONO_ARCH_ILP32
+			/*
+			 * arm64_32: the registers are 64 bits wide though pointers are 32, and the C ABI passes a
+			 * vtype in whole registers. Pointer-sized slots would drop every other 4 bytes (the second
+			 * field of a QCallTypeHandle, say). One of up to 4 bytes fits the low half as an i32.
+			 */
+			lainfo->esize = ainfo->size > 4 ? 8 : 0;
+#endif
 			break;
 		case ArgVtypeOnStack:
 			if (ainfo->hfa) {
@@ -3190,6 +3198,10 @@ mono_arch_get_llvm_call_info (MonoCompile *cfg, MonoMethodSignature *sig)
 			} else {
 				lainfo->storage = LLVMArgAsIArgs;
 				lainfo->nslots = ainfo->size / 8;
+#ifdef MONO_ARCH_ILP32
+				/* Stack slots are 8 bytes too (see ArgVtypeInIRegs). */
+				lainfo->esize = 8;
+#endif
 			}
 			break;
 		case ArgInSIMDReg:

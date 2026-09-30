@@ -6952,6 +6952,15 @@ emit_simd_intrinsics (const char *class_ns, const char *class_name, MonoCompile 
 		ins = arch_emit_simd_intrinsics (class_ns, class_name, cfg, cmethod, fsig, args);
 		if (ins)
 			return ins;
+	} else if ((!strcmp (class_ns, "System.Runtime.Intrinsics.Arm") || !strcmp (class_ns, "System.Runtime.Intrinsics.X86") ||
+			!strcmp (class_ns, "System.Runtime.Intrinsics.Wasm")) && !strcmp (cmethod->name, "get_IsSupported")) {
+		/*
+		 * No SIMD (is_simd_supported: llvm-only outside wasm, as for watchOS arm64_32), so no hardware
+		 * intrinsic is supported. IsSupported has to say so here: its IL body calls itself, and left
+		 * to it CoreLib's first ArmBase.IsSupported check never returns.
+		 */
+		EMIT_NEW_ICONST (cfg, ins, 0);
+		return ins;
 	}
 
 	if (!strcmp (class_ns, "System.Runtime.Intrinsics")) {

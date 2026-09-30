@@ -1345,7 +1345,7 @@ mini_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSign
 				case MONO_TYPE_I:
 				case MONO_TYPE_U:
 					ins->dreg = mono_alloc_ireg (cfg);
-#if SIZEOF_REGISTER == 8
+#if TARGET_SIZEOF_VOID_P == 8
 					ins->type = STACK_I8;
 #else
 					ins->type = STACK_I4;
@@ -1572,6 +1572,13 @@ mini_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSign
 				i2f_opcode = OP_MOVE_I4_TO_F;
 				cfg->has_atomic_exchange_i4 = TRUE;
 			}
+#ifdef MONO_ARCH_ILP32
+			/* arm64_32: 64-bit registers, but references and native ints are 32 bits wide in memory. */
+			else if (is_ref || fsig->params [0]->type == MONO_TYPE_I) {
+				opcode = OP_ATOMIC_EXCHANGE_I4;
+				cfg->has_atomic_exchange_i4 = TRUE;
+			}
+#endif
 #if SIZEOF_REGISTER == 8
 			else if (is_ref ||
 			         fsig->params [0]->type == MONO_TYPE_I8 ||
@@ -1629,7 +1636,7 @@ mini_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSign
 				ins->type = STACK_I8;
 				break;
 			case MONO_TYPE_I:
-#if SIZEOF_REGISTER == 8
+#if TARGET_SIZEOF_VOID_P == 8
 				ins->type = STACK_I8;
 #else
 				ins->type = STACK_I4;
@@ -1712,6 +1719,13 @@ mini_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSign
 				i2f_opcode = OP_MOVE_I4_TO_F;
 				cfg->has_atomic_cas_i4 = TRUE;
 			}
+#ifdef MONO_ARCH_ILP32
+			/* arm64_32: 64-bit registers, but references and native ints are 32 bits wide in memory. */
+			else if (is_ref || param1_type->type == MONO_TYPE_I) {
+				opcode = OP_ATOMIC_CAS_I4;
+				cfg->has_atomic_cas_i4 = TRUE;
+			}
+#endif
 #if SIZEOF_REGISTER == 8
 			else if (is_ref ||
 			         param1_type->type == MONO_TYPE_I8 ||
@@ -1793,7 +1807,7 @@ mini_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSign
 				ins->type = STACK_I8;
 				break;
 			case MONO_TYPE_I:
-#if SIZEOF_REGISTER == 8
+#if TARGET_SIZEOF_VOID_P == 8
 				ins->type = STACK_I8;
 #else
 				ins->type = STACK_I4;
@@ -1868,6 +1882,13 @@ mini_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSign
 				opcode = OP_ATOMIC_LOAD_R4;
 			else if (t->type == MONO_TYPE_R8)
 				opcode = OP_ATOMIC_LOAD_R8;
+#ifdef MONO_ARCH_ILP32
+			/* arm64_32: 64-bit registers, but references and native ints are 32 bits wide in memory. */
+			else if (t->type == MONO_TYPE_I)
+				opcode = OP_ATOMIC_LOAD_I4;
+			else if (is_ref || t->type == MONO_TYPE_U)
+				opcode = OP_ATOMIC_LOAD_U4;
+#endif
 #if SIZEOF_REGISTER == 8
 			else if (t->type == MONO_TYPE_I8 || t->type == MONO_TYPE_I)
 				opcode = OP_ATOMIC_LOAD_I8;
@@ -1906,7 +1927,7 @@ mini_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSign
 					break;
 				case MONO_TYPE_I:
 				case MONO_TYPE_U:
-#if SIZEOF_REGISTER == 8
+#if TARGET_SIZEOF_VOID_P == 8
 					ins->type = STACK_I8;
 #else
 					ins->type = STACK_I4;
@@ -1949,6 +1970,13 @@ mini_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSign
 				opcode = OP_ATOMIC_STORE_R4;
 			else if (t->type == MONO_TYPE_R8)
 				opcode = OP_ATOMIC_STORE_R8;
+#ifdef MONO_ARCH_ILP32
+			/* arm64_32: 64-bit registers, but references and native ints are 32 bits wide in memory. */
+			else if (t->type == MONO_TYPE_I)
+				opcode = OP_ATOMIC_STORE_I4;
+			else if (is_ref || t->type == MONO_TYPE_U)
+				opcode = OP_ATOMIC_STORE_U4;
+#endif
 #if SIZEOF_REGISTER == 8
 			else if (t->type == MONO_TYPE_I8 || t->type == MONO_TYPE_I)
 				opcode = OP_ATOMIC_STORE_I8;
