@@ -1621,7 +1621,10 @@ sig_to_llvm_sig_full (EmitContext *ctx, MonoMethodSignature *sig, LLVMCallInfo *
 			/* Empty struct with LayoutKind attribute and without specified size */
 			g_assert(cinfo->ret.nslots == 0);
 			ret_type = LLVMIntType (8);
-		} else if (size < TARGET_SIZEOF_VOID_P) {
+		} else if (size < SIZEOF_REGISTER) {
+			/* Narrower than a register, returned in its exact width. Keyed on the register, not the
+			 * pointer: on arm64_32 a 4-byte struct (GCMemoryInfo) came back as an i64 stored into its
+			 * 4-byte slot, and LLVM made the out-of-bounds store's null check an unconditional throw. */
 			g_assert (cinfo->ret.nslots == 1);
 			ret_type = LLVMIntType (size * 8);
 		} else {

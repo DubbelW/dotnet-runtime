@@ -4,6 +4,7 @@
  *
  */
 
+#include <mono/utils/mono-logger-internals.h>
 #include <config.h>
 #include <mono/metadata/tokentype.h>
 #include "llvmonly-runtime.h"
@@ -945,6 +946,10 @@ mini_llvm_init_method (MonoAotFileInfo *info, gpointer aot_module, gpointer meth
 
 	res = mono_aot_init_llvm_method (amodule, method_info, vtable ? vtable->klass : NULL, error);
 	if (!res || !is_ok (error)) {
+		/* Said before it becomes an exception: building that exception can need methods initialized
+		 * here too, and when those fail as well the reason would be lost. */
+		mono_trace (G_LOG_LEVEL_WARNING, MONO_TRACE_AOT, "AOT: failed to initialize an llvm-only method: %s",
+			is_ok (error) ? "(no error set)" : mono_error_get_message (error));
 		MonoException *ex = mono_error_convert_to_exception (error);
 		if (ex) {
 			/* Its okay to raise in llvmonly mode */

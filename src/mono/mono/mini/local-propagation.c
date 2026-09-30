@@ -665,9 +665,11 @@ mono_local_cprop (MonoCompile *cfg)
 					opcode2 = mono_op_to_op_imm (ins->opcode);
 					if ((opcode2 != -1) && mono_arch_is_inst_imm (ins->opcode, opcode2, def->inst_c0) && ((srcindex == 1) || (ins->sreg2 == -1))) {
 						ins->opcode = GUINT32_TO_OPCODE (opcode2);
-						if ((def->opcode == OP_I8CONST) && TARGET_SIZEOF_VOID_P == 4)
+						/* 64-bit immediates live in inst_l on 32-bit registers only (MONO_EMIT_NEW_LCOMPARE_IMM,
+						 * GET_LONG_IMM): the register size, not the pointer size, which differs on arm64_32. */
+						if ((def->opcode == OP_I8CONST) && SIZEOF_REGISTER == 4)
 							ins->inst_l = def->inst_l;
-						else if (regtype == 'l' && TARGET_SIZEOF_VOID_P == 4)
+						else if (regtype == 'l' && SIZEOF_REGISTER == 4)
 							/* This can happen if the def was a result of an iconst+conv.i8, which is transformed into just an iconst */
 							ins->inst_l = def->inst_c0;
 						else
