@@ -1463,7 +1463,13 @@ mono_create_delegate_trampoline_info (MonoClass *klass, MonoMethod *method, gboo
 
 #ifndef HOST_WASM
 	if (is_virtual) {
-		tramp_info->invoke_impl = mono_get_delegate_virtual_invoke_impl (mono_method_signature_internal (invoke), method);
+		/*
+		 * Not in llvm-only mode, virtual or not: invoke_impl is a function descriptor there, which
+		 * llvmonly-runtime.c fills in on the delegate's first use, and making the arch's code would
+		 * need a JIT (on arm64_32, the one llvm-only target besides wasm, it aborts: no code manager).
+		 */
+		if (!mono_llvm_only)
+			tramp_info->invoke_impl = mono_get_delegate_virtual_invoke_impl (mono_method_signature_internal (invoke), method);
 	} else {
 		if (!mono_llvm_only) {
 			guint32 code_size = 0;

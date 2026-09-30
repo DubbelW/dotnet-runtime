@@ -2430,6 +2430,19 @@ load_aot_module (MonoAssemblyLoadContext *alc, MonoAssembly *assembly, gpointer 
 				mono_aot_get_method (m, load_error);
 				mono_error_cleanup (load_error); /* FIXME don't swallow the error */
 				error_init (load_error);
+				if (mono_llvm_only) {
+					/*
+					 * What native code calls is the method's native-to-managed wrapper, by its export
+					 * name, and in llvm-only code that wrapper has no init check of its own: load_method
+					 * inits it when it is looked up, so look it up. Otherwise its constants (the GC
+					 * transition icalls, say) stay NULL until something else happens to load it.
+					 */
+					MonoMethod *wrapper = mono_marshal_get_managed_wrapper (m, NULL, 0, load_error);
+					if (is_ok (load_error))
+						mono_aot_get_method (wrapper, load_error);
+					mono_error_cleanup (load_error); /* FIXME don't swallow the error */
+					error_init (load_error);
+				}
 			}
 		}
 	}

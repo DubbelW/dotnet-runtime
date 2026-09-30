@@ -7637,6 +7637,14 @@ emit_method_info (MonoAotCompile *acfg, MonoCompile *cfg)
 		g_free (symbol);
 		/* aot-runtime.c will use this to check whenever this is an llvm method */
 		cfg->method_info_offset = 0;
+		/*
+		 * Except for a native-to-managed wrapper in llvm-only mode: it has no init check of its own
+		 * (it may run on a thread the runtime does not know yet), so load_method () inits it, from the
+		 * info in the blob. Without it the wrapper's constants stay NULL, and the first export called
+		 * from native code crashes on its way out (the GC transition icall).
+		 */
+		if (acfg->aot_opts.llvm_only && method->wrapper_type == MONO_WRAPPER_NATIVE_TO_MANAGED)
+			cfg->method_info_offset = add_to_blob (acfg, buf, GPTRDIFF_TO_UINT32 (p - buf));
 	} else {
 		cfg->method_info_offset = add_to_blob (acfg, buf, GPTRDIFF_TO_UINT32 (p - buf));
 	}
@@ -9918,6 +9926,19 @@ gboolean
 mono_aot_is_externally_callable (MonoMethod *cmethod)
 {
 	return method_is_externally_callable (llvm_acfg, cmethod);
+}
+
+/*
+ * The name a method is exported under ([UnmanagedCallersOnly (EntryPoint = ...)]'s native-to-managed
+ * wrapper), without the platform's symbol prefix, which LLVM adds itself; or NULL.
+ */
+const char*
+mono_aot_get_export_name (MonoMethod *method)
+{
+	const char *name = (const char *)g_hash_table_lookup (llvm_acfg->export_names, method);
+	if (name && llvm_acfg->user_symbol_prefix [0] && name [0] == llvm_acfg->user_symbol_prefix [0])
+		name ++;
+	return name;
 }
 
 char*

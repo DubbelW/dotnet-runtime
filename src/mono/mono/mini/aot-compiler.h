@@ -17,6 +17,7 @@ char*    mono_aot_get_method_name           (MonoCompile *cfg);
 char*    mono_aot_get_mangled_method_name   (MonoMethod *method);
 gboolean mono_aot_is_direct_callable        (MonoJumpInfo *patch_info);
 gboolean mono_aot_is_externally_callable    (MonoMethod *cmethod);
+const char* mono_aot_get_export_name       (MonoMethod *method);
 void     mono_aot_mark_unused_llvm_plt_entry(MonoJumpInfo *patch_info);
 char*    mono_aot_get_plt_symbol            (MonoJumpInfoType type, gconstpointer data);
 char*    mono_aot_get_direct_call_symbol    (MonoJumpInfoType type, gconstpointer data);

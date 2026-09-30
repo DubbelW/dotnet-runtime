@@ -4532,6 +4532,17 @@ is_supported_callconv (EmitContext *ctx, MonoCallInst *call)
 	gboolean result = (call->signature->call_convention == MONO_CALL_DEFAULT) ||
 			  (call->signature->call_convention == MONO_CALL_C) ||
 			  (call->signature->call_convention == MONO_CALL_STDCALL);
+#elif defined(TARGET_ARM64)
+	/*
+	 * On arm64 every unmanaged convention is the C one. In llvm-only code, which has no JIT to fall
+	 * back to, a calli through a delegate* unmanaged<...> (MONO_CALL_UNMANAGED_MD) would otherwise send
+	 * its method, and the native-indirect wrapper it goes through, to the interpreter, which cannot
+	 * call native code there either (no interp-to-native trampoline without a JIT or wasm's tables).
+	 */
+	int cc = call->signature->call_convention;
+	gboolean result = (cc == MONO_CALL_DEFAULT) ||
+			  (ctx->llvm_only && (cc == MONO_CALL_C || cc == MONO_CALL_UNMANAGED_MD || cc == MONO_CALL_STDCALL ||
+					      cc == MONO_CALL_THISCALL || cc == MONO_CALL_FASTCALL));
 #else
 	gboolean result = (call->signature->call_convention == MONO_CALL_DEFAULT) || ((call->signature->call_convention == MONO_CALL_C) && ctx->llvm_only);
 #endif
@@ -5291,6 +5302,16 @@ emit_llvmonly_landing_pad (EmitContext *ctx, int group_index, int group_size)
 		LLVMBuildRet (builder, LLVMBuildLoad2 (builder, ret_type, gep, ""));
 		break;
 	}
+	case LLVMArgAsIArgs:
+	case LLVMArgFpStruct:
+		/*
+		 * A vtype returned in registers as an LLVM aggregate (an HFA on arm64: a struct of floats
+		 * or doubles), which has the vtype's layout: loaded from il_state_ret as OP_SETRET loads it
+		 * from the vtype's address. Only llvm-only arm64 gets here with one; wasm has neither.
+		 */
+		addr = convert (ctx, ctx->il_state_ret, pointer_type (ret_type));
+		LLVMBuildRet (builder, LLVMBuildLoad2 (builder, ret_type, addr, ""));
+		break;
 	case LLVMArgVtypeRetAddr:
 	case LLVMArgVtypeByRef: {
 		LLVMValueRef ret_addr;
@@ -13191,6 +13212,18 @@ emit_method_inner (EmitContext *ctx)
 
 	if (cfg->disable_omit_fp)
 		mono_llvm_add_func_attr_nv (method, "frame-pointer", "all");
+
+	if (cfg->compile_aot && ctx->module->llvm_only) {
+		/*
+		 * An [UnmanagedCallersOnly (EntryPoint = ...)] export: native code calls it by that name. The
+		 * JIT's AOT emits its label under it; here the method keeps its internal name (the method
+		 * table refers to it) and gets a global alias. Without one no llvm-only image had exports
+		 * (wasm, the other llvm-only target, calls in through generated C instead).
+		 */
+		const char *export_name = mono_aot_get_export_name (cfg->method);
+		if (export_name)
+			LLVMAddAlias2 (ctx->lmodule, ctx->method_type, 0, method, export_name);
+	}
 
 	if (cfg->compile_aot) {
 		if (mono_aot_is_externally_callable (cfg->method)) {
