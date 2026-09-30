@@ -32,6 +32,11 @@
     <_BuildNativeEnvironmentVariables>$(_BuildNativeEnvironmentVariables);WASI_SDK_PATH=$(WASI_SDK_PATH)</_BuildNativeEnvironmentVariables>
   </PropertyGroup>
 
+  <!-- watchOS arm64_32 (build-native.sh): the ABI of the older watches, which only Mono targets. -->
+  <PropertyGroup Condition="'$(TargetswatchOS)' == 'true' and '$(MonoWatchOSAbi)' != ''">
+    <_BuildNativeEnvironmentVariables>$(_BuildNativeEnvironmentVariables);WATCHOS_ABI=$(MonoWatchOSAbi)</_BuildNativeEnvironmentVariables>
+  </PropertyGroup>
+
   <ItemGroup Condition="'$(TargetOS)' == 'browser' or '$(TargetOS)' == 'wasi'">
     <PackageReference Include="Microsoft.NETCore.Runtime.ICU.Transport" PrivateAssets="all" Version="$(MicrosoftNETCoreRuntimeICUTransportVersion)" GeneratePathProperty="true" />
   </ItemGroup>

@@ -22,6 +22,8 @@
     <ILLinkSharedDirectory>$(MSBuildThisFileDirectory)ILLink\</ILLinkSharedDirectory>
     <IsBigEndian Condition="'$(Platform)' == 's390x'">true</IsBigEndian>
     <Is64Bit Condition="'$(Platform)' == 'arm64' or '$(Platform)' == 'x64' or '$(Platform)' == 's390x' or '$(Platform)' == 'loongarch64' or '$(Platform)' == 'ppc64le' or '$(Platform)' == 'riscv64'">true</Is64Bit>
+    <!-- watchOS arm64_32 (Mono, /p:MonoWatchOSAbi=arm64_32): arm64 code with 32-bit pointers. -->
+    <Is64Bit Condition="'$(TargetswatchOS)' == 'true' and '$(TargetswatchOSSimulator)' != 'true' and '$(MonoWatchOSAbi)' == 'arm64_32'">false</Is64Bit>
     <UseMinimalGlobalizationData Condition="'$(TargetsBrowser)' == 'true' or '$(TargetsWasi)' == 'true'">true</UseMinimalGlobalizationData>
     <EnableLibraryImportGenerator>true</EnableLibraryImportGenerator>
   </PropertyGroup>

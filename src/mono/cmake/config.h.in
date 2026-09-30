@@ -78,6 +78,9 @@
 /* Host Platform is tvOS */
 #cmakedefine HOST_TVOS 1
 
+/* Host Platform is watchOS */
+#cmakedefine HOST_WATCHOS 1
+
 /* Host Platform is Mac Catalyst */
 #cmakedefine HOST_MACCAT 1
 

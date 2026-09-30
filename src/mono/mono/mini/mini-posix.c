@@ -111,6 +111,13 @@ MONO_SIG_HANDLER_SIGNATURE (mono_chain_signal)
 	return FALSE;
 }
 
+/* watchOS apps get no signal handlers of their own (no sigaction), so there is none to chain to. */
+void
+mono_chain_signal_to_default_sigsegv_handler (void)
+{
+	g_error ("mono_chain_signal_to_default_sigsegv_handler not supported on watchOS");
+}
+
 #ifndef HOST_DARWIN
 void
 mono_runtime_install_handlers (void)

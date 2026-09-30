@@ -2692,8 +2692,17 @@ mono_arch_flush_icache (guint8 *code, gint size)
 gboolean
 mono_arch_opcode_needs_emulation (MonoCompile *cfg, int opcode)
 {
+#ifdef MONO_ARCH_ILP32
+	/*
+	 * arm64_32 sets MONO_ARCH_EMULATE_DIV (mini-arm64.h, for its armv7k-compatible bitcode past), which
+	 * makes decompose.c ask about each division. The hardware divides, and the code comes from LLVM,
+	 * so none of them needs a helper.
+	 */
+	return FALSE;
+#else
 	NOT_IMPLEMENTED;
 	return FALSE;
+#endif
 }
 
 GList *

@@ -148,7 +148,10 @@ elif [[ "$__TargetOS" == watchos ]]; then
     # set default watchOS device deployment target
     # keep in sync with SetOSTargetMinVersions in the root Directory.Build.props
     __CMakeArgs="-DCMAKE_SYSTEM_NAME=watchOS -DCMAKE_OSX_SYSROOT=watchos -DCMAKE_OSX_DEPLOYMENT_TARGET=10.0 $__CMakeArgs"
-    if [[ "$__TargetArch" == arm64 ]]; then
+    if [[ "$__TargetArch" == arm64 && "$WATCHOS_ABI" == arm64_32 ]]; then
+        # The older watches' ABI (Mono, /p:MonoWatchOSAbi=arm64_32): arm64 code with 32-bit pointers.
+        __CMakeArgs="-DCMAKE_OSX_ARCHITECTURES=\"arm64_32\" $__CMakeArgs"
+    elif [[ "$__TargetArch" == arm64 ]]; then
         __CMakeArgs="-DCMAKE_OSX_ARCHITECTURES=\"arm64\" $__CMakeArgs"
     else
         echo "Error: Unknown watchOS architecture $__TargetArch."

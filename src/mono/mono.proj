@@ -63,6 +63,7 @@
   <!-- default thread suspend for specific platforms -->
   <PropertyGroup>
     <MonoThreadSuspend Condition="'$(TargetswatchOS)' == 'true' and '$(MonoThreadSuspend)' == ''">coop</MonoThreadSuspend>
+    <_MonoWatchOSArm64_32 Condition="'$(TargetswatchOS)' == 'true' and '$(TargetswatchOSSimulator)' != 'true' and '$(MonoWatchOSAbi)' == 'arm64_32'">true</_MonoWatchOSArm64_32>
     <MonoThreadSuspend Condition="'$(TargetsBrowser)' == 'true' and '$(WasmEnableThreads)' == 'true' and '$(MonoThreadSuspend)' == ''">coop</MonoThreadSuspend>
     <!-- wasm isn't really preemptive, but we don't want safepoints -->
     <MonoThreadSuspend Condition="( '$(TargetsBrowser)' == 'true' or '$(TargetsWasi)' == 'true' ) and '$(MonoThreadSuspend)' == ''">preemptive</MonoThreadSuspend>
@@ -591,6 +592,11 @@ JS_ENGINES = [NODE_JS]
       <_MonoCMakeSystemName Condition="'$(TargetstvOS)' == 'true'">tvOS</_MonoCMakeSystemName>
       <_MonoCMakeVersionMin Condition="'$(TargetsiOS)' == 'true'">$(iOSVersionMin)</_MonoCMakeVersionMin>
       <_MonoCMakeVersionMin Condition="'$(TargetstvOS)' == 'true'">$(tvOSVersionMin)</_MonoCMakeVersionMin>
+      <!-- A watchOS target has TargetstvOS set too (eng/RuntimeIdentifier.props); these come after, so they win. -->
+      <_MonoCMakeSysroot Condition="'$(TargetswatchOS)' == 'true' and '$(TargetswatchOSSimulator)' != 'true'">$(XcodeDir)/Platforms/WatchOS.platform/Developer/SDKs/WatchOS$(watchOSVersion).sdk</_MonoCMakeSysroot>
+      <_MonoCMakeSysroot Condition="'$(TargetswatchOS)' == 'true' and '$(TargetswatchOSSimulator)' == 'true'">$(XcodeDir)/Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator$(watchOSVersion).sdk</_MonoCMakeSysroot>
+      <_MonoCMakeSystemName Condition="'$(TargetswatchOS)' == 'true'">watchOS</_MonoCMakeSystemName>
+      <_MonoCMakeVersionMin Condition="'$(TargetswatchOS)' == 'true'">$(watchOSVersionMin)</_MonoCMakeVersionMin>
     </PropertyGroup>
     <ItemGroup Condition="'$(TargetsiOS)' == 'true' or '$(TargetstvOS)' == 'true'">
       <_MonoCMakeArgs Include="-DCMAKE_SYSTEM_NAME=$(_MonoCMakeSystemName)"/>
@@ -601,7 +607,10 @@ JS_ENGINES = [NODE_JS]
     </ItemGroup>
     <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
       <_MonoCMakeArgs Condition="'$(Platform)' == 'x64'" Include="-DCMAKE_OSX_ARCHITECTURES=x86_64" />
-      <_MonoCMakeArgs Condition="'$(Platform)' == 'arm64'" Include="-DCMAKE_OSX_ARCHITECTURES=arm64" />
+      <_MonoCMakeArgs Condition="'$(Platform)' == 'arm64' and '$(_MonoWatchOSArm64_32)' != 'true'" Include="-DCMAKE_OSX_ARCHITECTURES=arm64" />
+      <!-- The older watches' ABI (Series 4 to 8, Ultra 1): arm64 with 32-bit pointers. Opt in with
+           /p:MonoWatchOSAbi=arm64_32; watchOS arm64 is otherwise the 64-bit ABI of Series 9 and later. -->
+      <_MonoCMakeArgs Condition="'$(_MonoWatchOSArm64_32)' == 'true'" Include="-DCMAKE_OSX_ARCHITECTURES=arm64_32" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetsiOS)' == 'true' or '$(TargetstvOS)' == 'true' or '$(TargetsMacCatalyst)' == 'true'">
       <_MonoCMakeArgs Include="-DENABLE_ICALL_EXPORT=1"/>
@@ -793,6 +802,11 @@ JS_ENGINES = [NODE_JS]
       <MonoAotCMakeSysroot Condition="'$(TargetstvOS)' == 'true' and '$(TargetstvOSSimulator)' == 'true'">$(XcodeDir)/Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator$(tvOSVersion).sdk</MonoAotCMakeSysroot>
       <MonoAotAbi Condition="'$(Platform)' == 'arm64'">aarch64-apple-darwin10</MonoAotAbi>
       <MonoAotAbi Condition="'$(Platform)' == 'x64'">x86_64-apple-darwin10</MonoAotAbi>
+      <!-- watchOS (TargetstvOS is set for it too, so these come after and win). arm64_32 has an ABI
+           triple of its own, the one Xamarin.WatchOS used: arm64 code generation with 32-bit pointers. -->
+      <MonoAotCMakeSysroot Condition="'$(TargetswatchOS)' == 'true' and '$(TargetswatchOSSimulator)' != 'true'">$(XcodeDir)/Platforms/WatchOS.platform/Developer/SDKs/WatchOS$(watchOSVersion).sdk</MonoAotCMakeSysroot>
+      <MonoAotCMakeSysroot Condition="'$(TargetswatchOS)' == 'true' and '$(TargetswatchOSSimulator)' == 'true'">$(XcodeDir)/Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator$(watchOSVersion).sdk</MonoAotCMakeSysroot>
+      <MonoAotAbi Condition="'$(_MonoWatchOSArm64_32)' == 'true'">aarch64-apple-darwin10_ilp32</MonoAotAbi>
     </PropertyGroup>
 
     <!-- Catalyst specific options -->
