@@ -20,6 +20,8 @@ namespace Internal.TypeSystem
         iOSSimulator,
         tvOS,
         tvOSSimulator,
+        watchOS,
+        watchOSSimulator,
         FreeBSD,
         NetBSD,
         SunOS,
@@ -308,7 +310,7 @@ namespace Internal.TypeSystem
 
         /// <summary>
         /// Returns True if compiling for Apple family of operating systems.
-        /// Currently including OSX, MacCatalyst, iOS, iOSSimulator, tvOS and tvOSSimulator
+        /// Currently including OSX, MacCatalyst, iOS, iOSSimulator, tvOS, tvOSSimulator, watchOS and watchOSSimulator
         /// </summary>
         public bool IsApplePlatform
         {
@@ -319,7 +321,9 @@ namespace Internal.TypeSystem
                     OperatingSystem == TargetOS.iOS ||
                     OperatingSystem == TargetOS.iOSSimulator ||
                     OperatingSystem == TargetOS.tvOS ||
-                    OperatingSystem == TargetOS.tvOSSimulator;
+                    OperatingSystem == TargetOS.tvOSSimulator ||
+                    OperatingSystem == TargetOS.watchOS ||
+                    OperatingSystem == TargetOS.watchOSSimulator;
             }
         }
 

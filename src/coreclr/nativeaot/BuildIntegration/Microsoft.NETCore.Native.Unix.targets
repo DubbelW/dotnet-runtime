@@ -80,17 +80,21 @@ The .NET Foundation licenses this file to you under the MIT license.
     <PropertyGroup Condition="'$(_IsiOSLikePlatform)' == 'true'">
       <AppleMinOSVersion Condition="'$(AppleMinOSVersion)' == '' and '$(_targetOS)' == 'maccatalyst'">15.0</AppleMinOSVersion>
       <AppleMinOSVersion Condition="'$(AppleMinOSVersion)' == '' and ($(_targetOS.StartsWith('ios')) or $(_targetOS.StartsWith('tvos')))">12.2</AppleMinOSVersion>
+      <AppleMinOSVersion Condition="'$(AppleMinOSVersion)' == '' and $(_targetOS.StartsWith('watchos'))">10.0</AppleMinOSVersion>
 
       <_AppleSdkName Condition="'$(_targetOS)' == 'ios'">iphoneos</_AppleSdkName>
       <_AppleSdkName Condition="'$(_targetOS)' == 'iossimulator'">iphonesimulator</_AppleSdkName>
       <_AppleSdkName Condition="'$(_targetOS)' == 'tvos'">appletvos</_AppleSdkName>
       <_AppleSdkName Condition="'$(_targetOS)' == 'tvossimulator'">appletvsimulator</_AppleSdkName>
+      <_AppleSdkName Condition="'$(_targetOS)' == 'watchos'">watchos</_AppleSdkName>
+      <_AppleSdkName Condition="'$(_targetOS)' == 'watchossimulator'">watchsimulator</_AppleSdkName>
       <_AppleSdkName Condition="'$(_targetOS)' == 'maccatalyst'">macosx</_AppleSdkName>
 
       <_AppleTripleOS Condition="'$(_targetOS)' == 'maccatalyst' or $(_targetOS.StartsWith('ios'))">ios</_AppleTripleOS>
       <_AppleTripleOS Condition="$(_targetOS.StartsWith('tvos'))">tvos</_AppleTripleOS>
+      <_AppleTripleOS Condition="$(_targetOS.StartsWith('watchos'))">watchos</_AppleTripleOS>
 
-      <_AppleTripleAbi Condition="'$(_targetOS)' == 'ios' or '$(_targetOS)' == 'tvos'">macho</_AppleTripleAbi>
+      <_AppleTripleAbi Condition="'$(_targetOS)' == 'ios' or '$(_targetOS)' == 'tvos' or '$(_targetOS)' == 'watchos'">macho</_AppleTripleAbi>
       <_AppleTripleAbi Condition="'$(_targetOS)' == 'maccatalyst'">macabi</_AppleTripleAbi>
       <_AppleTripleAbi Condition="$(_targetOS.EndsWith('simulator'))">simulator</_AppleTripleAbi>
 
@@ -140,7 +144,7 @@ The .NET Foundation licenses this file to you under the MIT license.
       <NetCoreAppNativeLibrary Include="System.Native" />
       <NetCoreAppNativeLibrary Include="System.Globalization.Native" Condition="'$(StaticICULinking)' != 'true' and '$(InvariantGlobalization)' != 'true'" />
       <NetCoreAppNativeLibrary Include="System.IO.Compression.Native" />
-      <NetCoreAppNativeLibrary Include="System.Net.Security.Native" Condition="!$(_targetOS.StartsWith('tvos')) and '$(_linuxLibcFlavor)' != 'bionic'" />
+      <NetCoreAppNativeLibrary Include="System.Net.Security.Native" Condition="!$(_targetOS.StartsWith('tvos')) and !$(_targetOS.StartsWith('watchos')) and '$(_linuxLibcFlavor)' != 'bionic'" />
       <NetCoreAppNativeLibrary Include="System.Security.Cryptography.Native.Apple" Condition="'$(_IsApplePlatform)' == 'true'" />
       <!-- No OpenSSL on Apple platforms or Android -->
       <NetCoreAppNativeLibrary Include="System.Security.Cryptography.Native.OpenSsl" Condition="'$(StaticOpenSslLinking)' != 'true' and '$(_IsApplePlatform)' != 'true' and '$(_targetOS)' != 'android'" />
@@ -206,7 +210,7 @@ The .NET Foundation licenses this file to you under the MIT license.
       <NativeFramework Include="Network" />
       <NativeFramework Include="Security" />
       <!-- The library builds don't reference the GSS API on tvOS builds. -->
-      <NativeFramework Condition="!$(_targetOS.StartsWith('tvos'))" Include="GSS" />
+      <NativeFramework Condition="!$(_targetOS.StartsWith('tvos')) and !$(_targetOS.StartsWith('watchos'))" Include="GSS" />
     </ItemGroup>
 
     <ItemGroup>

@@ -31,7 +31,8 @@ usage()
   echo "  --librariesConfiguration (-lc)  Libraries build configuration: Debug or Release."
   echo "                                  [Default: Debug]"
   echo "  --os                            Target operating system: windows, linux, freebsd, osx, maccatalyst, tvos,"
-  echo "                                  tvossimulator, ios, iossimulator, android, browser, wasi, netbsd, illumos, solaris"
+  echo "                                  tvossimulator, watchos, watchossimulator, ios, iossimulator, android, browser, wasi,"
+  echo "                                  netbsd, illumos, solaris"
   echo "                                  linux-musl, linux-bionic, tizen, or haiku."
   echo "                                  [Default: Your machine's OS.]"
   echo "  --targetrid <rid>               Optional argument that overrides the target rid name."
@@ -142,7 +143,7 @@ initDistroRid()
     local isCrossBuild="$3"
 
     # Only pass ROOTFS_DIR if __DoCrossArchBuild is specified and the current platform is not an Apple platform (that doesn't use rootfs)
-    if [[ $isCrossBuild == 1 && "$targetOs" != "osx" && "$targetOs" != "android" && "$targetOs" != "ios" && "$targetOs" != "iossimulator" && "$targetOs" != "tvos" && "$targetOs" != "tvossimulator" && "$targetOs" != "maccatalyst" ]]; then
+    if [[ $isCrossBuild == 1 && "$targetOs" != "osx" && "$targetOs" != "android" && "$targetOs" != "ios" && "$targetOs" != "iossimulator" && "$targetOs" != "tvos" && "$targetOs" != "tvossimulator" && "$targetOs" != "watchos" && "$targetOs" != "watchossimulator" && "$targetOs" != "maccatalyst" ]]; then
         passedRootfsDir=${ROOTFS_DIR}
     fi
     initDistroRidGlobal "${targetOs}" "${targetArch}" "${passedRootfsDir}"
@@ -278,6 +279,10 @@ while [[ $# > 0 ]]; do
           os="tvos" ;;
         tvossimulator)
           os="tvossimulator" ;;
+        watchos)
+          os="watchos" ;;
+        watchossimulator)
+          os="watchossimulator" ;;
         ios)
           os="ios" ;;
         iossimulator)

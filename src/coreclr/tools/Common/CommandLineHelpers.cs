@@ -82,6 +82,8 @@ namespace System.CommandLine
                 "ios" => TargetOS.iOS,
                 "tvossimulator" => TargetOS.tvOSSimulator,
                 "tvos" => TargetOS.tvOS,
+                "watchossimulator" => TargetOS.watchOSSimulator,
+                "watchos" => TargetOS.watchOS,
                 _ => throw new CommandLineException($"Target OS '{token}' is not supported")
             };
         }

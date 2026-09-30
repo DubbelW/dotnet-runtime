@@ -146,6 +146,22 @@ if(CLR_CMAKE_HOST_OS STREQUAL tvos OR CLR_CMAKE_HOST_OS STREQUAL tvossimulator)
     endif()
 endif(CLR_CMAKE_HOST_OS STREQUAL tvos OR CLR_CMAKE_HOST_OS STREQUAL tvossimulator)
 
+# watchOS is built as a tvOS with further restrictions: everything tvOS leaves out (GSS, the ICU
+# data, the bundled zlib, ...) watchOS leaves out too, so it sets the tvOS flags as well, and
+# CLR_CMAKE_*_WATCHOS / HOST_WATCHOS / TARGET_WATCHOS mark the places where it has to go further.
+# arm64 is the 64-bit ABI of Apple Watch Series 9 / Ultra 2 and later.
+if(CLR_CMAKE_HOST_OS STREQUAL watchos OR CLR_CMAKE_HOST_OS STREQUAL watchossimulator)
+    set(CLR_CMAKE_HOST_UNIX 1)
+    set(CLR_CMAKE_HOST_APPLE 1)
+    set(CLR_CMAKE_HOST_TVOS 1)
+    set(CLR_CMAKE_HOST_WATCHOS 1)
+    if(CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+        set(CLR_CMAKE_HOST_UNIX_ARM64 1)
+    else()
+        clr_unknown_arch()
+    endif()
+endif(CLR_CMAKE_HOST_OS STREQUAL watchos OR CLR_CMAKE_HOST_OS STREQUAL watchossimulator)
+
 if(CLR_CMAKE_HOST_OS STREQUAL android)
     set(CLR_CMAKE_HOST_UNIX 1)
     set(CLR_CMAKE_HOST_LINUX 1)
@@ -403,6 +419,14 @@ if(CLR_CMAKE_TARGET_OS STREQUAL tvos OR CLR_CMAKE_TARGET_OS STREQUAL tvossimulat
     set(CLR_CMAKE_TARGET_APPLE 1)
     set(CLR_CMAKE_TARGET_TVOS 1)
 endif(CLR_CMAKE_TARGET_OS STREQUAL tvos OR CLR_CMAKE_TARGET_OS STREQUAL tvossimulator)
+
+# See the host side above: a watchOS target is a tvOS target too.
+if(CLR_CMAKE_TARGET_OS STREQUAL watchos OR CLR_CMAKE_TARGET_OS STREQUAL watchossimulator)
+    set(CLR_CMAKE_TARGET_UNIX 1)
+    set(CLR_CMAKE_TARGET_APPLE 1)
+    set(CLR_CMAKE_TARGET_TVOS 1)
+    set(CLR_CMAKE_TARGET_WATCHOS 1)
+endif(CLR_CMAKE_TARGET_OS STREQUAL watchos OR CLR_CMAKE_TARGET_OS STREQUAL watchossimulator)
 
 if(CLR_CMAKE_TARGET_OS STREQUAL freebsd)
     set(CLR_CMAKE_TARGET_UNIX 1)

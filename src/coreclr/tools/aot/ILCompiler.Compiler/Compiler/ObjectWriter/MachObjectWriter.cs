@@ -266,6 +266,14 @@ namespace ILCompiler.ObjectWriter
                     };
                     buildVersion.MinimumPlatformVersion = 0x0C_02_00; // 12.2.0
                     break;
+
+                // arm64 only: Apple Watch Series 9 / Ultra 2 and later, and the simulator.
+                case TargetOS.watchOS:
+                case TargetOS.watchOSSimulator:
+                    buildVersion.Platform = _targetOS == TargetOS.watchOS ? PLATFORM_WATCHOS : PLATFORM_WATCHOSSIMULATOR;
+                    buildVersion.MinimumPlatformVersion = 0x0A_00_00; // 10.0.0
+                    buildVersion.SdkVersion = 0x0A_00_00; // 10.0.0
+                    break;
             }
             buildVersion.Write(outputFileStream);
 

@@ -158,6 +158,32 @@ build_native()
             echo "Error: Unknown tvOS Simulator architecture $__TargetArch."
             exit 1
         fi
+    elif [[ "$targetOS" == watchossimulator ]]; then
+        cmakeArgs="-C $__RepoRootDir/eng/native/tryrun_ios_tvos.cmake $cmakeArgs"
+
+        # set default watchOS simulator deployment target
+        # keep in sync with SetOSTargetMinVersions in the root Directory.Build.props
+        cmakeArgs="-DCMAKE_SYSTEM_NAME=watchOS -DCMAKE_OSX_SYSROOT=watchsimulator -DCMAKE_OSX_DEPLOYMENT_TARGET=10.0 $cmakeArgs"
+        if [[ "$__TargetArch" == arm64 ]]; then
+            cmakeArgs="-DCMAKE_OSX_ARCHITECTURES=\"arm64\" $cmakeArgs"
+        else
+            echo "Error: Unknown watchOS Simulator architecture $__TargetArch."
+            exit 1
+        fi
+    elif [[ "$targetOS" == watchos ]]; then
+        cmakeArgs="-C $__RepoRootDir/eng/native/tryrun_ios_tvos.cmake $cmakeArgs"
+
+        # set default watchOS device deployment target
+        # keep in sync with SetOSTargetMinVersions in the root Directory.Build.props
+        # arm64 is the 64-bit ABI of Apple Watch Series 9 / Ultra 2 and later; the older watches'
+        # arm64_32 is not an architecture this build knows.
+        cmakeArgs="-DCMAKE_SYSTEM_NAME=watchOS -DCMAKE_OSX_SYSROOT=watchos -DCMAKE_OSX_DEPLOYMENT_TARGET=10.0 $cmakeArgs"
+        if [[ "$__TargetArch" == arm64 ]]; then
+            cmakeArgs="-DCMAKE_OSX_ARCHITECTURES=\"arm64\" $cmakeArgs"
+        else
+            echo "Error: Unknown watchOS architecture $__TargetArch."
+            exit 1
+        fi
     elif [[ "$targetOS" == tvos ]]; then
         cmakeArgs="-C $__RepoRootDir/eng/native/tryrun_ios_tvos.cmake $cmakeArgs"
 
@@ -545,6 +571,9 @@ elif [[ "$__TargetOS" == ios || "$__TargetOS" == iossimulator ]]; then
     # nothing to do here
     true
 elif [[ "$__TargetOS" == tvos || "$__TargetOS" == tvossimulator ]]; then
+    # nothing to do here
+    true
+elif [[ "$__TargetOS" == watchos || "$__TargetOS" == watchossimulator ]]; then
     # nothing to do here
     true
 elif [[ "$__TargetOS" == osx || "$__TargetOS" == maccatalyst ]]; then

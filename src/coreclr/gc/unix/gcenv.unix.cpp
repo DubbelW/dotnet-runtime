@@ -486,6 +486,14 @@ void GCToOSInterface::FlushProcessWriteBuffers()
         // Iterate through each of the threads in the list.
         for (mach_msg_type_number_t i = 0; i < cThreads; i++)
         {
+#if defined(HOST_WATCHOS)
+            // Every watchOS version has thread_get_register_pointer_values, and the fallback below is
+            // not an option there: thread_get_state is unavailable to watchOS apps.
+            {
+                size_t registers = 128;
+                machret = thread_get_register_pointer_values(pThreads[i], &sp, &registers, registerValues);
+            }
+#else
             if (__builtin_available (macOS 10.14, iOS 12, tvOS 9, *))
             {
                 // Request the threads pointer values to force the thread to emit a memory barrier
@@ -507,6 +515,7 @@ void GCToOSInterface::FlushProcessWriteBuffers()
                 #error Unexpected architecture
 #endif
             }
+#endif // HOST_WATCHOS
 
             if (machret == KERN_INSUFFICIENT_BUFFER_SIZE)
             {

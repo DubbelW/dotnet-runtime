@@ -83,6 +83,9 @@ elif [[ "$__TargetOS" == ios || "$__TargetOS" == iossimulator ]]; then
 elif [[ "$__TargetOS" == tvos || "$__TargetOS" == tvossimulator ]]; then
     # nothing to do here
     true
+elif [[ "$__TargetOS" == watchos || "$__TargetOS" == watchossimulator ]]; then
+    # nothing to do here
+    true
 elif [[ "$__TargetOS" == osx || "$__TargetOS" == maccatalyst ]]; then
     # nothing to do here
     true
@@ -129,6 +132,26 @@ elif [[ "$__TargetOS" == ios ]]; then
         __CMakeArgs="-DCMAKE_OSX_ARCHITECTURES=\"armv7;armv7s\" $__CMakeArgs"
     else
         echo "Error: Unknown iOS architecture $__TargetArch."
+        exit 1
+    fi
+elif [[ "$__TargetOS" == watchossimulator ]]; then
+    # set default watchOS simulator deployment target
+    # keep in sync with SetOSTargetMinVersions in the root Directory.Build.props
+    __CMakeArgs="-DCMAKE_SYSTEM_NAME=watchOS -DCMAKE_OSX_SYSROOT=watchsimulator -DCMAKE_OSX_DEPLOYMENT_TARGET=10.0 $__CMakeArgs"
+    if [[ "$__TargetArch" == arm64 ]]; then
+        __CMakeArgs="-DCMAKE_OSX_ARCHITECTURES=\"arm64\" $__CMakeArgs"
+    else
+        echo "Error: Unknown watchOS Simulator architecture $__TargetArch."
+        exit 1
+    fi
+elif [[ "$__TargetOS" == watchos ]]; then
+    # set default watchOS device deployment target
+    # keep in sync with SetOSTargetMinVersions in the root Directory.Build.props
+    __CMakeArgs="-DCMAKE_SYSTEM_NAME=watchOS -DCMAKE_OSX_SYSROOT=watchos -DCMAKE_OSX_DEPLOYMENT_TARGET=10.0 $__CMakeArgs"
+    if [[ "$__TargetArch" == arm64 ]]; then
+        __CMakeArgs="-DCMAKE_OSX_ARCHITECTURES=\"arm64\" $__CMakeArgs"
+    else
+        echo "Error: Unknown watchOS architecture $__TargetArch."
         exit 1
     fi
 elif [[ "$__TargetOS" == tvossimulator ]]; then
