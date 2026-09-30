@@ -1722,8 +1722,16 @@ remove_wrappers_from_trace (GList **trace_ips_p)
 	while (p) {
 		MonoJitInfo *jinfo = (MonoJitInfo*) p->data;
 		GList *next_p = p->next->next->next;
+		/*
+		 * An llvm-only throw records only the ip of each frame (mini_llvmonly_throw_exception), and a
+		 * rethrow whose catch runs in the interpreter (il_state) starts from that trace: look the jit
+		 * info up, as the readers of trace_ips do. Without, it read through NULL (on arm64_32, the
+		 * first rethrow of a cancelled HTTP request).
+		 */
+		if (!jinfo)
+			jinfo = mono_jit_info_table_find_internal (p->next->next->data, TRUE, FALSE);
 		/* FIXME Maybe remove more wrapper types */
-		if (jinfo->d.method->wrapper_type == MONO_WRAPPER_OTHER) {
+		if (jinfo && jinfo->d.method->wrapper_type == MONO_WRAPPER_OTHER) {
 			trace_ips = g_list_delete_link (trace_ips, p->next->next);
 			trace_ips = g_list_delete_link (trace_ips, p->next);
 			trace_ips = g_list_delete_link (trace_ips, p);
